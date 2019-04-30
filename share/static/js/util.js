@@ -631,6 +631,7 @@ jQuery(function() {
     });
 
     loadCollapseStates();
+    Chart.platform.disableCSSInjection = true;
 });
 
 // focus jquery object in window, only moving the screen when necessary
