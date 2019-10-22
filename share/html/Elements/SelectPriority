@@ -45,11 +45,49 @@
 %# those contributions and any derivatives thereof.
 %#
 %# END BPS TAGGED BLOCK }}}
-<input name="<% $Name %>" type="text" value="<% $Default %>" size="5" class="form-control" />
+% if (%map) {
+<select class="select-priority form-control" name="<% $Name %>">
+%     unless ( defined $Default ) {
+<option value="">-</option>
+%     }
+<%PERL>
+foreach my $label ( @order ) {
+    my ($value, $selected);
+    if ( $label eq $default_label ) {
+        ($value, $selected) = ($Default, 'selected="selected"');
+    } else {
+        ($value, $selected) = ($map{ $label }, '');
+    }
+</%PERL>
+<option class="<% lc $label %>" value="<% $value %>" <% $selected |n %>><% loc($label) %></option>
+% }
+</select>
+% } else {
+<input name="<% $Name %>" value="<% $Default %>" size="5" class="form-control" />
+% }
 <%ARGS>
 $Name => 'Priority'
 $Default => ''
+$QueueObj => undef
+$PriorityStringMap => undef
 </%ARGS>
 <%INIT>
+
+my $priority_is_string = undef;
+my @order;
+my $default_label = '';
+my %map = ();
+
+
+if( $QueueObj ) {
+    if( my $map = RT->Config->PriorityMap( $QueueObj->Name ) ) {
+        %map   = %$map;
+        @order = @{RT->Config->PriorityMapOrder( $QueueObj->Name)};
+        if ( defined $Default && length $Default ) {
+        $default_label = RT::Ticket->_PriorityAsString( $Default, \%map ) || '';
+        }
+    }
+}
+
 $Default = '' unless defined $Default;
 </%INIT>
