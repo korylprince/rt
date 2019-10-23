@@ -3776,6 +3776,8 @@ sub _PriorityAsString {
 
     my @orderedLabels = sort { $map->{$b} <=> $map->{$a} }  keys %$map;
 
+    # priority could be '(no value)' (or a localized version)
+    $priority = 0 if $priority !~ m{^\d+$};
     # return the label for the first priority <= $priority
     foreach my $label ( @orderedLabels ) {
         return $label if $priority >= $map->{ $label };

@@ -79,12 +79,12 @@ my $default_label = '';
 my %map = ();
 
 
-if( $QueueObj ) {
+if( $QueueObj and $QueueObj->Id ) {
     if( my $map = RT->Config->PriorityMap( $QueueObj->Name ) ) {
         %map   = %$map;
         @order = @{RT->Config->PriorityMapOrder( $QueueObj->Name)};
         if ( defined $Default && length $Default ) {
-        $default_label = RT::Ticket->_PriorityAsString( $Default, \%map ) || '';
+        $default_label = $QueueObj->_PriorityAsString( $Default);
         }
     }
 }
