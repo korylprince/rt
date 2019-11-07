@@ -609,6 +609,21 @@ our %META;
             }
         },
     },
+    CanonicalizeEmailAddressMatch => {
+        Section         => 'Mail',                                     #loc
+        Type            => 'SCALAR',
+        Widget          => '/Widgets/Form/String',
+    },
+    CanonicalizeEmailAddressReplace => {
+        Section         => 'Mail',                                     #loc
+        Type            => 'SCALAR',
+        Widget          => '/Widgets/Form/String',
+    },
+    EmailSubjectTagRegex => {
+        Section         => 'Mail',                                     #loc
+        Type            => 'SCALAR',
+        Widget          => '/Widgets/Form/String',
+    },
     # User overridable mail options
     EmailFrequency => {
         Section         => 'Mail',                                     #loc
@@ -1323,6 +1338,12 @@ our %META;
             }
         },
     },
+    UserAutocreateDefaultsOnLogin => {
+        Type => 'HASH',
+    },
+    AutoCreateNonExternalUsers => {
+        Widget => '/Widgets/Form/Boolean',
+    },
     ServiceAgreements => {
         Type => 'HASH',
     },
@@ -1629,7 +1650,18 @@ our %META;
     WebImagesURL => {
         Widget => '/Widgets/Form/String',
     },
-
+    AssetQueues => {
+        Type => 'ARRAY',
+        Hints  => '',
+    },
+    AssetBasicCustomFieldsOnCreate => {
+        Type => 'ARRAY',
+        Hints  => '[ "foo", "bar"]',
+    },
+    DefaultCatalog => {
+        Widget => '/Widgets/Form/String',
+        Hints  => 'General assets',
+    },
     AssetSearchFormat => {
         Widget => '/Widgets/Form/MultilineString',
     },
@@ -1685,6 +1717,34 @@ our %META;
     DefaultSearchResultOrder => {
         Widget => '/Widgets/Form/Select',
         WidgetArguments => { Values => [qw(ASC DESC)] },
+    },
+
+    LDAPHost => {
+        Widget => '/Widgets/Form/String',
+    },
+    LDAPOptions => {
+        Widget => '/Widgets/Form/MultilineString',
+    },
+    LDAPUser => {
+        Widget => '/Widgets/Form/String',
+    },
+    LDAPPassword => {
+        Widget => '/Widgets/Form/String',
+    },
+    LDAPFilter => {
+        Widget => '/Widgets/Form/String',
+    },
+    LDAPMapping => {
+        Widget => '/Widgets/Form/MultilineString',
+    },
+    LDAPGroupBase => {
+        Widget => '/Widgets/Form/String',
+    },
+    LDAPGroupFilter => {
+        Widget => '/Widgets/Form/String',
+    },
+    LDAPGroupMapping => {
+        Widget => '/Widgets/Form/MultilineString',
     },
 );
 my %OPTIONS = ();
