@@ -141,6 +141,9 @@ sub JSFiles {
         quoteselection.js
         fontawesome.min.js
         rights-inspector.js
+        d3.min.js
+        lifecycleui-editor.js
+        lifecycleui-model.js
         }, RT->Config->Get('JSFiles');
 }
 
