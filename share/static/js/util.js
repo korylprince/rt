@@ -217,7 +217,10 @@ jQuery(function() {
         changeYear: true,
         showOtherMonths: true,
         showOn: 'none',
-        selectOtherMonths: true
+        selectOtherMonths: true,
+        onClose: function() {
+            jQuery(this).trigger('datepicker:close');
+        }
     };
     jQuery(".datepicker").focus(function() {
         var val = jQuery(this).val();
@@ -478,6 +481,32 @@ function addprincipal_onchange(ev, ui) {
     }
 }
 
+function refreshCollectionListRow(tbody, table, success, error) {
+    var params = {
+        DisplayFormat : table.data('display-format'),
+        ObjectClass   : table.data('class'),
+        MaxItems      : table.data('max-items'),
+        InlineEdit    : table.hasClass('inline-edit'),
+
+        i             : tbody.data('index'),
+        ObjectId      : tbody.data('record-id'),
+        Warning       : tbody.data('warning')
+    };
+
+    tbody.addClass('refreshing');
+
+    jQuery.ajax({
+        url    : RT.Config.WebHomePath + '/Helpers/CollectionListRow',
+        method : 'GET',
+        data   : params,
+        success: function (response) {
+            tbody.replaceWith(response);
+            jQuery('.selectpicker').selectpicker('refresh');
+            if (success) { success(response) }
+        },
+        error: error
+    });
+}
 
 function escapeCssSelector(str) {
     return str.replace(/([^A-Za-z0-9_-])/g,'\\$1');
@@ -600,6 +629,249 @@ jQuery(function() {
     });
 
     loadCollapseStates();
+});
+
+/* inline edit */
+jQuery(function () {
+    var inlineEditEnabled = true;
+    var disableInlineEdit = function () {
+        inlineEditEnabled = false;
+        jQuery('.editable').removeClass('editing').removeClass('loading');
+        jQuery('table.inline-edit').removeClass('inline-edit');
+    };
+
+    var inlineEditingDate = false;
+    var scrollHandler = null;
+    var escapeKeyHandler = null;
+    var inlineEditFormPristine = null;
+
+    var beginInlineEdit = function (cell) {
+        if (!inlineEditEnabled) {
+            return;
+        }
+
+        var value = cell.find('.value');
+        var editor = cell.find('.editor');
+
+        if (jQuery('td.editable.editing').length) {
+            return;
+        }
+
+        var table = cell.closest('table');
+        while (table.length) {
+            table.closest('tr').children().each(function () {
+                var cell = jQuery(this);
+                cell.attr('width', cell.width()).addClass('width-locked');
+            });
+
+            table = table.parent().closest('table');
+        }
+
+        cell.closest('tr').children().each(function () {
+            var other = jQuery(this);
+            if (cell[0] != this) {
+                other.attr('width', other.width()).addClass('width-locked');
+            }
+        });
+
+        inlineEditPristineForm = cell.find('form').clone();
+
+        var displayHeight = cell.height();
+        var displayWidth = cell.width();
+
+        cell.addClass('editing');
+        jQuery('body').addClass('inline-editing');
+
+        escapeKeyHandler = function (e) {
+            if (e.keyCode == 27) {
+                e.preventDefault();
+                cancelInlineEdit(editor);
+            }
+        };
+        jQuery(document).keyup(escapeKeyHandler);
+
+        editor.find(':input:visible:enabled:first').focus();
+
+        if (editor.find('.datepicker').length) {
+            inlineEditingDate = true;
+        }
+    };
+
+    var cancelInlineEdit = function (editor) {
+        var cell = editor.closest('td');
+
+        inlineEditingDate = false;
+        cell.removeClass('editing').removeAttr('height').removeAttr('width');
+        jQuery('.width-locked').removeClass('width-locked').removeAttr('width');
+        editor.removeClass('wide');
+        jQuery('body').removeClass('inline-editing');
+
+        cell.find('form').replaceWith(inlineEditPristineForm);
+        inlineEditPristineForm = null;
+
+        if (scrollHandler) {
+            jQuery(window).off('scroll', scrollHandler);
+        }
+        if (escapeKeyHandler) {
+            jQuery(document).off('keyup', escapeKeyHandler);
+        }
+    };
+
+    var submitInlineEdit = function (editor) {
+        if (!inlineEditEnabled) {
+            return;
+        }
+
+        inlineEditingDate = false;
+
+        if (!editor.data('changed')) {
+            cancelInlineEdit(editor);
+            return;
+        }
+
+        var cell = editor.closest('td');
+        var tbody = cell.closest('tbody');
+        var table = tbody.closest('table');
+
+        if (!cell.hasClass('editing')) {
+            return;
+        }
+
+        var params = editor.serialize();
+
+        editor.find(':input').attr('disabled', 'disabled');
+        cell.removeClass('editing').addClass('loading');
+        jQuery('body').removeClass('inline-editing');
+        tbody.addClass('refreshing');
+        inlineEditPristineForm = null;
+
+        var renderError = function (error) {
+            jQuery.jGrowl(error, { sticky: true, themeState: 'none' });
+            cell.addClass('error text-danger').html(loc_key('error'));
+            jQuery(window).off('scroll', scrollHandler);
+            jQuery(document).off('keyup', escapeKeyHandler);
+            disableInlineEdit();
+        };
+        jQuery.ajax({
+            url     : editor.attr('action'),
+            method  : 'POST',
+            data    : params,
+            dataType: "json",
+            success : function (results) {
+                jQuery.each(results.actions, function (i, action) {
+                    jQuery.jGrowl(action, { themeState: 'none' });
+                });
+
+                refreshCollectionListRow(
+                    tbody,
+                    table,
+                    function () {
+                        jQuery(window).off('scroll', scrollHandler);
+                        jQuery(document).off('keyup', escapeKeyHandler);
+                    },
+                    function (xhr, error) {
+                        renderError(error);
+                    }
+                );
+            },
+            error   : function (xhr, error) {
+                renderError(error);
+            }
+        });
+    };
+
+    jQuery(document).on('click', 'table.inline-edit td.editable .edit-icon', function (e) {
+        var cell = jQuery(this).closest('td');
+        beginInlineEdit(cell);
+    });
+
+    jQuery(document).on('change', 'td.editable.editing form :input', function () {
+        jQuery(this).closest('form').data('changed', true);
+    });
+
+    jQuery(document).on('submit', 'td.editable.editing form', function (e) {
+        e.preventDefault();
+        submitInlineEdit(jQuery(this));
+    });
+
+    jQuery(document).on('click', 'td.editable a.cancel', function (e) {
+        e.preventDefault();
+        cancelInlineEdit(jQuery(this).closest('form'));
+    });
+
+    jQuery(document).on('change', 'td.editable.editing form select', function () {
+        submitInlineEdit(jQuery(this).closest('form'));
+    });
+
+    jQuery(document).on('datepicker:close', 'td.editable.editing form .datepicker', function () {
+        var editor = jQuery(this);
+        editor.closest('form').trigger('submit');
+    });
+
+    /* inline edit on ticket display */
+    var toggle_inline_edit = function (link) {
+        link.siblings('.inline-edit-toggle').removeClass('hidden');
+        link.addClass('hidden');
+        link.closest('.titlebox').toggleClass('editing');
+    }
+
+    jQuery('.inline-edit-toggle').click(function (e) {
+        e.preventDefault();
+        toggle_inline_edit(jQuery(this));
+    });
+
+    jQuery('.titlebox[data-inline-edit-behavior="click"] > .titlebox-content').click(function (e) {
+        if (jQuery(e.target).is('a, input, select, textarea')) {
+            return;
+        }
+
+        e.preventDefault();
+        var container = jQuery(this).closest('.titlebox');
+        if (container.hasClass('editing')) {
+            return;
+        }
+        toggle_inline_edit(container.find('.inline-edit-toggle:visible'));
+    });
+
+    /* on submit, pull in all the other inline edit forms' fields into
+     * the currently-being-submitted form. that way we don't lose user
+     * input */
+    jQuery('form.inline-edit').submit(function (e) {
+        var currentForm = jQuery(this);
+
+        /* limit to currently-editing forms, since cancelling inline
+         * edit merely hides the form */
+        jQuery('.titlebox.editing form.inline-edit').each(function () {
+            var siblingForm = jQuery(this);
+
+            if (siblingForm.is(currentForm)) {
+                return;
+            }
+
+            siblingForm.find(':input').each(function () {
+                var field = jQuery(this);
+
+                if (field.attr('name') == "") {
+                    return;
+                }
+
+                /* skip duplicates, such as ticket id */
+                if (currentForm.find('[name="' + field.attr('name') + '"]').length > 0) {
+                    return;
+                }
+
+                var clone = field.clone().hide().appendTo(currentForm);
+
+                /* "For performance reasons, the dynamic state of certain
+                 * form elements (e.g., user data typed into textarea
+                 * and user selections made to a select) is not copied
+                 * to the cloned elements", so manually copy them */
+                if (clone.is('select, textarea')) {
+                    clone.val(field.val());
+                }
+            });
+        });
+    });
 });
 
 // focus jquery object in window, only moving the screen when necessary

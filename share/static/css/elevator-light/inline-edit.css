@@ -1,0 +1,74 @@
+td.editable .value .edit-icon {
+  display: inline;
+  float: right;
+  margin-top: 0.25em;
+  visibility: hidden;
+}
+
+td.editable .value:hover .edit-icon {
+  visibility: visible;
+}
+
+td.editable .value:hover .edit-icon:hover {
+  cursor: pointer;
+}
+
+td .value .edit-icon {
+  display: none;
+}
+
+td.editable.error {
+  font-weight: bold;
+}
+
+td.editable > form.editor {
+  display: none;
+}
+
+td.editable.loading > .value,
+td.editable.loading > form.editor,
+td.editable.editing > form.editor {
+  display: flex;
+}
+
+td.editable.editing > .value,
+td.editable.loading > .value {
+  display: none;
+}
+
+tbody.list-item.refreshing {
+  opacity: 0.5;
+}
+
+td.editable > form.editor > .cancel {
+  display: inline-block;
+  margin-top: 3px;
+  font-size: 16px;
+}
+
+td.editable.loading > form.editor > .cancel {
+  display: none;
+}
+
+td.editable.loading > form.editor > .loading {
+  display: inline-block;
+  margin-top: 9px;
+}
+
+td.editable > form.editor > .loading {
+  display: none;
+}
+
+td.editable > form.editor .form-row {
+  margin-top: 0;
+}
+
+.titlebox form.inline-edit,
+.titlebox.editing .inline-edit-display {
+  display: none;
+}
+
+.titlebox.editing form.inline-edit,
+.titlebox .inline-edit-display {
+  display: block;
+}
