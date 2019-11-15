@@ -15,6 +15,13 @@ table.collection-as-table a {
     font-weight: bold
 }
 
+@media only screen and (max-width: 600px) {
+    table.collection-as-table {
+        display: inline-block;
+        overflow-x: scroll;
+    }
+}
+
 table.collection-as-table th.collection-as-table a,
 table.queue-summary th.collection-as-table a {
     color: #3858a3
