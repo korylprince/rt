@@ -303,6 +303,10 @@ button {
   margin-top: 0;
 }
 
+.form-row.boolean > .value .form-row {
+  margin-top: 5px;
+}
+
 .col-auto .datepicker {
   width: 17em;
 }
