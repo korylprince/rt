@@ -193,3 +193,8 @@ ol ol {
   position: relative;
   padding-bottom: 5em;
 }
+
+/* over-ride fullwidth bootstrap select box/div size to auto */
+.autowidth-select {
+    width: auto !important;
+}

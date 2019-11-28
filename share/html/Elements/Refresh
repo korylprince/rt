@@ -45,7 +45,7 @@
 %# those contributions and any derivatives thereof.
 %#
 %# END BPS TAGGED BLOCK }}}
-<select name="<%$Name%>" class="selectpicker form-control refresh">
+<select name="<%$Name%>" class="autowidth-select selectpicker form-control refresh">
 <option value="-1"
 %unless ($Default) {
  selected="selected"
