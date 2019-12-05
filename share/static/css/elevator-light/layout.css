@@ -141,13 +141,18 @@ div#header {
 div#header h1 {
     position: absolute;
     left: 2em;
-    right: 20em;
     top: 0.5em;
     height: 1.4em;
     font-size: 1.4em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+@media (max-width: 1060px) {
+    div#header h1 {
+        right: 13%;
+    }
 }
 
 h1 {
